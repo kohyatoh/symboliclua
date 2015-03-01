@@ -1,10 +1,16 @@
 local symbolic = {} -- package
-local Symbol = {} -- Symbol metatable
-Symbol.__index = Symbol
+--[[
+    Symbol metatable.
+    Symbol objects must not have any properties
+    in order to protect properties from user code.
+    Instead `properties` tables should be used.
+--]]
+local Symbol = {}
 
 -- package global private variables
-local symbols = {}
-local constraints = {}
+local symbols = {} -- list of symbols
+local properties = {} -- symbol -> type
+local constraints = {} -- list of constraints of an execution path
 
 -- libraries
 local table, string, tostring = table, string, tostring
@@ -14,7 +20,15 @@ local function issymbol(v)
 end
 
 local function gettype(v)
-    return issymbol(v) and v.t or type(v)
+    return issymbol(v) and properties[v].t or type(v)
+end
+
+local function settype (v, t)
+    if properties[v].t then
+        assert(properties[v].t == t)
+    else
+        properties[v].t = t
+    end
 end
 
 local function z3code(symbols, constraints)
@@ -22,7 +36,10 @@ local function z3code(symbols, constraints)
     table.insert(lines, "from z3 import *")
     table.insert(lines, "solver = Solver()")
     for i, v in ipairs(symbols) do
-        table.insert(lines, string.format("%s = Real('%s')", v, v))
+        if properties[v].t == "number" then
+            table.insert(lines, string.format("%s = Real('%s')", v, v))
+        end
+        -- ignore table here
     end
     for i, v in ipairs(constraints) do
         table.insert(lines, string.format("solver.add(%s)", v))
@@ -61,7 +78,8 @@ function symbolic.eval (f)
     for k = 0, 100 do
         symbols = {}
         constraints = {}
-        local r = pcall(f)
+        properties = {}
+        local r, e = pcall(f)
         if r then
             local code = z3code(symbols, constraints)
             local s = z3execute(code)
@@ -69,6 +87,9 @@ function symbolic.eval (f)
                 print(table.concat(s, '\n'))
                 break
             end
+        else
+                -- For debug
+--            print(e)
         end
     end
 end
@@ -81,8 +102,8 @@ function symbolic.eq (a, b)
     if not issymbol(a) and not issymbol(b) then
         return a == b
     end
-    if issymbol(a) and not a.t then a:settype(gettype(b)) end
-    if issymbol(b) and not b.t then b:settype(gettype(a)) end
+    if issymbol(a) and not properties[a].t then settype(a, gettype(b)) end
+    if issymbol(b) and not properties[b].t then settype(b, gettype(a)) end
     local i = math.random(2)
     local expr = string.format("%s%s%s",
             tostring(a), ({'==', '!='})[i], tostring(b))
@@ -92,32 +113,31 @@ end
 
 -- Symbol methods
 function Symbol:new ()
-    local id = #symbols
-    local v = setmetatable({ id = id }, self)
-    table.insert(symbols, v)
+    local id = #symbols + 1
+    local v = setmetatable({}, self)
+    symbols[id] = v
+    properties[v] = { id = id, t = False }
     return v
 end
 
 function Symbol:__tostring ()
-    return 'x' .. tostring(self.id)
+    return 'x' .. tostring(properties[self].id)
 end
 
 function Symbol.__add (a, b)
     local newval = Symbol:new()
-    if issymbol(a) then a:settype("number") end
-    if issymbol(b) then b:settype("number") end
-    newval:settype("number")
+    if issymbol(a) then settype(a, "number") end
+    if issymbol(b) then settype(b, "number") end
+    settype(newval, "number")
     local expr = string.format("%s==%s+%s", tostring(newval), tostring(a), tostring(b))
     table.insert(constraints, expr)
     return newval
 end
 
-function Symbol:settype (t)
-    if self.t then
-        assert(self.t == t)
-    else
-        self.t = t
-    end
+function Symbol.__index (a)
+    local newval = Symbol:new()
+    settype(a, "table")
+    return newval
 end
 
 return symbolic
