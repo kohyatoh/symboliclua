@@ -33,7 +33,27 @@ local function z3code(symbols, constraints)
     table.insert(lines, "   m = solver.model()")
     table.insert(lines, "   for i in range(len(m)):")
     table.insert(lines, "       print('%s,%s' % (m[i], m[m[i]]))")
+    table.insert(lines, "")
     return table.concat(lines, "\n")
+end
+
+local function z3execute(code)
+    local f = io.open('z.py', 'w')
+    f:write(code)
+    f:close()
+    local p = io.popen('python z.py')
+    local status = p:read()
+    if status == 'sat' then
+        local ret = {}
+        for line in p:lines() do
+            table.insert(ret, line)
+        end
+        p:close()
+        return ret
+    else
+        p:close()
+        return nil
+    end
 end
 
 -- package functions
@@ -43,9 +63,12 @@ function symbolic.eval (f)
         constraints = {}
         local r = pcall(f)
         if r then
-            local a = z3code(symbols, constraints)
-            print(a)
-            break
+            local code = z3code(symbols, constraints)
+            local s = z3execute(code)
+            if s then
+                print(table.concat(s, '\n'))
+                break
+            end
         end
     end
 end
