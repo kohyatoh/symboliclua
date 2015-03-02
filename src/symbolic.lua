@@ -94,7 +94,7 @@ end
 
 -- package functions
 function symbolic.eval (f)
-    local solution = nil
+    local sol = nil
     local seed = nil
     print "thinking..."
     for k = 1, 1000 do
@@ -113,11 +113,11 @@ function symbolic.eval (f)
             local code = z3code(symbols, constraints)
             local s = z3execute(code)
             if s then
-                solution = {}
+                sol = {}
                 seed = k
                 for i, w in ipairs(s) do
                     local k, v = w:match("(%w+),(%w+)")
-                    solution[tonumber(k:sub(2))] = tonumber(v)
+                    sol[tonumber(k:sub(2))] = tonumber(v)
                 end
                 break
             end
@@ -126,18 +126,20 @@ function symbolic.eval (f)
 --            print(e)
         end
     end
-    if solution then
+    if sol then
         print "solution found."
         for i, sym in ipairs(symbols) do
             if properties[sym].t == "table" then
                 print(string.format("%s : {}", sym))
-                solution[i] = {}
+                sol[i] = {}
             elseif properties[sym].t == "number" then
-                print(string.format("%s : %f", sym, solution[i]))
+                print(string.format("%s : %f", sym, sol[i]))
+            else
+                sol[i] = nil
             end
         end
         print "running with stubs..."
-        _ENV.solution = solution
+        solution = sol
         randomizer:setseed(seed)
         symbols = {}
         f()
@@ -174,7 +176,8 @@ end
 
 function Symbol:__tostring ()
     if solution then
-        return tostring(solution[properties[self].id])
+        local id = properties[self].id
+        return tostring(solution[id] or nil)
     end
     return 'x' .. tostring(properties[self].id)
 end
