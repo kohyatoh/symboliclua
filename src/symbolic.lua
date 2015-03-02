@@ -90,6 +90,7 @@ end
 -- package functions
 function symbolic.eval (f)
     solution = nil
+    local seed = nil
     for k = 1, 1000 do
         symbols = {}
         constraints = {}
@@ -102,6 +103,7 @@ function symbolic.eval (f)
             local s = z3execute(code)
             if s then
                 solution = {}
+                seed = k
                 for i, w in ipairs(s) do
                     local k, v = w:match("(%w+),(%w+)")
                     solution[tonumber(k:sub(2))] = tonumber(v)
@@ -121,6 +123,9 @@ function symbolic.eval (f)
                 print(string.format("%s : %f", sym, solution[i]))
             end
         end
+        randomizer:setseed(seed)
+        symbols = {}
+        f()
     else
         print "no solution"
     end
