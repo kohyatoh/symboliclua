@@ -28,11 +28,11 @@ function randomizer:int (n)
     return n and self.x % n or self.x
 end
 
-local function issymbol(v)
+local function issymbol (v)
     return getmetatable(v) == Symbol
 end
 
-local function gettype(v)
+local function gettype (v)
     return issymbol(v) and properties[v].t or type(v)
 end
 
@@ -44,7 +44,7 @@ local function settype (v, t)
     end
 end
 
-local function z3code(symbols, constraints)
+local function z3code (symbols, constraints)
     local lines = {}
     table.insert(lines, "from z3 import *")
     table.insert(lines, "solver = Solver()")
@@ -67,7 +67,7 @@ local function z3code(symbols, constraints)
     return table.concat(lines, "\n")
 end
 
-local function z3execute(code)
+local function z3execute (code)
     local f = io.open('z.py', 'w')
     f:write(code)
     f:close()
