@@ -11,10 +11,15 @@ local Symbol = {}
 local symbols = {} -- list of symbols
 local properties = {} -- symbol -> type
 local constraints = {} -- list of constraints of an execution path
-local solution = {} -- solution for constraints
+local solution = nil -- solution for constraints
 
 -- libraries
 local table, string, tostring = table, string, tostring
+
+print = function (...)
+    io.stdout:write(table.concat({...}, "\t"))
+    io.stdout:write("\n")
+end
 
 -- random int generator
 local randomizer = { x = 0, mod = 2^32 }
@@ -89,15 +94,21 @@ end
 
 -- package functions
 function symbolic.eval (f)
-    solution = nil
+    local solution = nil
     local seed = nil
+    print "thinking..."
     for k = 1, 1000 do
         symbols = {}
         constraints = {}
         properties = {}
         path = {}
         randomizer:setseed(k)
+        local stdout = io.stdout
+        io.stdout = io.open('/dev/null', 'w')
         local r, e = pcall(f)
+        io.stdout:flush()
+        io.stdout:close()
+        io.stdout = stdout
         if r then
             local code = z3code(symbols, constraints)
             local s = z3execute(code)
@@ -116,18 +127,22 @@ function symbolic.eval (f)
         end
     end
     if solution then
+        print "solution found."
         for i, sym in ipairs(symbols) do
             if properties[sym].t == "table" then
                 print(string.format("%s : {}", sym))
+                solution[i] = {}
             elseif properties[sym].t == "number" then
                 print(string.format("%s : %f", sym, solution[i]))
             end
         end
+        print "running with stubs..."
+        _ENV.solution = solution
         randomizer:setseed(seed)
         symbols = {}
         f()
     else
-        print "no solution"
+        print "no solution."
     end
 end
 
@@ -158,6 +173,9 @@ function Symbol:new ()
 end
 
 function Symbol:__tostring ()
+    if solution then
+        return tostring(solution[properties[self].id])
+    end
     return 'x' .. tostring(properties[self].id)
 end
 
@@ -171,9 +189,10 @@ function Symbol.__add (a, b)
     return newval
 end
 
-function Symbol.__index (a)
+function Symbol.__index (a, k)
     local newval = Symbol:new()
     settype(a, "table")
+    rawset(a, k, newval)
     return newval
 end
 
