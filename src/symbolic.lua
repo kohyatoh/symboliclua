@@ -15,6 +15,19 @@ local constraints = {} -- list of constraints of an execution path
 -- libraries
 local table, string, tostring = table, string, tostring
 
+-- random int generator
+local randomizer = { x = 0, mod = 2^32 }
+
+function randomizer:setseed (x)
+    self.x = x
+    for i = 1,10 do self:int() end
+end
+
+function randomizer:int (n)
+    self.x = (self.x * 16654525 + 1013904223) % self.mod
+    return n and self.x % n or self.x
+end
+
 local function issymbol(v)
     return getmetatable(v) == Symbol
 end
@@ -75,10 +88,12 @@ end
 
 -- package functions
 function symbolic.eval (f)
-    for k = 0, 100 do
+    for k = 0, 1000 do
         symbols = {}
         constraints = {}
         properties = {}
+        path = {}
+        randomizer:setseed(k)
         local r, e = pcall(f)
         if r then
             local code = z3code(symbols, constraints)
@@ -104,7 +119,7 @@ function symbolic.eq (a, b)
     end
     if issymbol(a) and not properties[a].t then settype(a, gettype(b)) end
     if issymbol(b) and not properties[b].t then settype(b, gettype(a)) end
-    local i = math.random(2)
+    local i = randomizer:int(2) + 1
     local expr = string.format("%s%s%s",
             tostring(a), ({'==', '!='})[i], tostring(b))
     table.insert(constraints, expr)
@@ -141,3 +156,4 @@ function Symbol.__index (a)
 end
 
 return symbolic
+
