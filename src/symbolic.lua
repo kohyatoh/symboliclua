@@ -11,6 +11,7 @@ local Symbol = {}
 local symbols = {} -- list of symbols
 local properties = {} -- symbol -> type
 local constraints = {} -- list of constraints of an execution path
+local solution = {} -- solution for constraints
 
 -- libraries
 local table, string, tostring = table, string, tostring
@@ -88,7 +89,8 @@ end
 
 -- package functions
 function symbolic.eval (f)
-    for k = 0, 1000 do
+    solution = nil
+    for k = 1, 1000 do
         symbols = {}
         constraints = {}
         properties = {}
@@ -99,13 +101,28 @@ function symbolic.eval (f)
             local code = z3code(symbols, constraints)
             local s = z3execute(code)
             if s then
-                print(table.concat(s, '\n'))
+                solution = {}
+                for i, w in ipairs(s) do
+                    local k, v = w:match("(%w+),(%w+)")
+                    solution[tonumber(k:sub(2))] = tonumber(v)
+                end
                 break
             end
         else
                 -- For debug
 --            print(e)
         end
+    end
+    if solution then
+        for i, sym in ipairs(symbols) do
+            if properties[sym].t == "table" then
+                print(string.format("%s : {}", sym))
+            elseif properties[sym].t == "number" then
+                print(string.format("%s : %f", sym, solution[i]))
+            end
+        end
+    else
+        print "no solution"
     end
 end
 
