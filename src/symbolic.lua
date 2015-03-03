@@ -127,7 +127,7 @@ function symbolic.eval (f)
             end
         else
                 -- For debug
---            print(e)
+            print(e)
         end
     end
     if sol then
@@ -209,7 +209,7 @@ end
 function Symbol.__call (a, arg)
     settype(a, "function")
     properties[a].ret = properties[a].ret or {}
-    local args = arg -- TODO: multiple args
+    local args = arg or {} -- TODO: multiple args
     if not properties[a].ret[args] then
         local newval = Symbol:new()
         properties[a].ret[args] = newval
