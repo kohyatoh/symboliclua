@@ -9,7 +9,7 @@ local Symbol = {}
 
 -- package global private variables
 local symbols = {} -- list of symbols
-local properties = {} -- symbol -> type
+local properties = {} -- symbol -> properties
 local constraints = {} -- list of constraints of an execution path
 local solution = nil -- solution for constraints
 
@@ -17,7 +17,11 @@ local solution = nil -- solution for constraints
 local table, string, tostring = table, string, tostring
 
 print = function (...)
-    io.stdout:write(table.concat({...}, "\t"))
+    local t = {...}
+    for i, v in ipairs(t) do
+        if i > 1 then io.stdout:write("\t") end
+        io.stdout:write(tostring(v))
+    end
     io.stdout:write("\n")
 end
 
@@ -132,6 +136,9 @@ function symbolic.eval (f)
             if properties[sym].t == "table" then
                 print(string.format("%s : {}", sym))
                 sol[i] = {}
+            elseif properties[sym].t == "function" then
+                print(string.format("%s : function", sym))
+                sol[i] = function() end
             elseif properties[sym].t == "number" then
                 print(string.format("%s : %f", sym, sol[i]))
             else
@@ -197,6 +204,17 @@ function Symbol.__index (a, k)
     settype(a, "table")
     rawset(a, k, newval)
     return newval
+end
+
+function Symbol.__call (a, arg)
+    settype(a, "function")
+    properties[a].ret = properties[a].ret or {}
+    local args = arg -- TODO: multiple args
+    if not properties[a].ret[args] then
+        local newval = Symbol:new()
+        properties[a].ret[args] = newval
+    end
+    return properties[a].ret[args]
 end
 
 return symbolic
