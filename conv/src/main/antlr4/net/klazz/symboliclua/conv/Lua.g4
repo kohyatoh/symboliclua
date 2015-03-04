@@ -109,7 +109,7 @@ exp
     | exp operatorMulDivMod exp # BinaryOpExp
     | exp operatorAddSub exp # BinaryOpExp
     | <assoc=right> exp operatorStrcat exp # BinaryOpExp
-    | exp operatorComparison exp # BinaryOpExp
+    | exp operatorComparison exp # ComparisonOpExp
     | exp operatorAnd exp # BinaryOpExp
     | exp operatorOr exp # BinaryOpExp
     ;

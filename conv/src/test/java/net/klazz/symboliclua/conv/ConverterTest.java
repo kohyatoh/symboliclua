@@ -32,4 +32,10 @@ public class ConverterTest {
         parse("1+2");
         assertEquals("1+2", converter.visit(parser.exp()));
     }
+
+    @Test
+    public void testEq() {
+        parse("1==2");
+        assertEquals("symbolic.eq(1,2)", converter.visit(parser.exp()));
+    }
 }

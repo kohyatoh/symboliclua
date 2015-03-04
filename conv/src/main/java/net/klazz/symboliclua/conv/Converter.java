@@ -2,6 +2,10 @@
 // Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 package net.klazz.symboliclua.conv;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import net.klazz.symboliclua.conv.LuaParser.ComparisonOpExpContext;
 import net.klazz.symboliclua.conv.LuaParser.SymbolContext;
 
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -9,7 +13,12 @@ import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 public class Converter extends LuaBaseVisitor<String> {
+    private final static Map<String, String> OPERATORS = new HashMap<>();;
     private CommonTokenStream mStream;
+
+    static {
+        OPERATORS.put("==", "eq");
+    }
 
     public Converter(CommonTokenStream stream) {
         mStream = stream;
@@ -34,5 +43,16 @@ public class Converter extends LuaBaseVisitor<String> {
         return "symbolic.value()";
     }
 
-
+    @Override
+    public String visitComparisonOpExp(ComparisonOpExpContext ctx) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("symbolic.");
+        builder.append(OPERATORS.get(ctx.getChild(1).getText()));
+        builder.append("(");
+        builder.append(visit(ctx.getChild(0)));
+        builder.append(",");
+        builder.append(visit(ctx.getChild(2)));
+        builder.append(")");
+        return builder.toString();
+    }
 }
