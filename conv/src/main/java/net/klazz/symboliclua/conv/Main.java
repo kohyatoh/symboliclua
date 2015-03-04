@@ -12,7 +12,7 @@ public class Main {
             LuaLexer l = new LuaLexer(in);
             CommonTokenStream stream = new CommonTokenStream(l);
             LuaParser p = new LuaParser(stream);
-            new Converter(stream).visit(p.chunk());
+            System.out.println(new Converter(stream).visit(p.chunk()));
         }
         catch (Exception e) {
             e.printStackTrace();
