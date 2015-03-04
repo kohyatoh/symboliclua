@@ -89,6 +89,7 @@ namelist
     ;
 
 explist
+
     : exp (',' exp)*
     ;
 
@@ -96,7 +97,7 @@ exp
     : 'nil' # Nil
     | 'false' # False
     | 'true' # True
-    | '?' # Value /* XXX: symbol value */
+    | '?' # Symbol /* XXX: symbol value */
     | number # Value
     | string # Value
     | '...' # Value
@@ -317,7 +318,7 @@ LINE_COMMENT
     ;
 
 WS
-    : [ \t\u000C\r\n]+ -> skip
+    : [ \t\u000C\r\n]+ -> channel(HIDDEN)
     ;
 
 SHEBANG

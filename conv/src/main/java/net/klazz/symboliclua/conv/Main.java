@@ -8,8 +8,11 @@ import org.antlr.v4.runtime.CommonTokenStream;
 public class Main {
     public static void main( String[] args ) {
         try {
-            LuaLexer l = new LuaLexer(new ANTLRInputStream(System.in));
-            LuaParser p = new LuaParser(new CommonTokenStream(l));
+            ANTLRInputStream in = new ANTLRInputStream(System.in);
+            LuaLexer l = new LuaLexer(in);
+            CommonTokenStream stream = new CommonTokenStream(l);
+            LuaParser p = new LuaParser(stream);
+            new Converter(stream).visit(p.chunk());
         }
         catch (Exception e) {
             e.printStackTrace();
