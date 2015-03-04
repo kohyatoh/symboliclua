@@ -44,4 +44,16 @@ public class ConverterTest {
         parse("1~=2");
         assertEquals("symbolic.ne(1,2)", converter.visit(parser.exp()));
     }
+
+    @Test
+    public void testSpaces() {
+        parse(" 1 + \n 2\t");
+        assertEquals(" 1 + \n 2\t", converter.visit(parser.exp()));
+    }
+
+    @Test
+    public void testEqWithSpaces() {
+        parse(" 1\t== \n\n 2\t");
+        assertEquals(" symbolic.eq(1\t, \n\n 2)\t", converter.visit(parser.exp()));
+    }
 }
