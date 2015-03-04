@@ -127,7 +127,7 @@ function symbolic.eval (f)
             end
         else
                 -- For debug
-            print(e)
+--            print(e)
         end
     end
     if sol then
