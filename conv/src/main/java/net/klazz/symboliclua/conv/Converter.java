@@ -18,6 +18,11 @@ public class Converter extends LuaBaseVisitor<String> {
 
     static {
         OPERATORS.put("==", "eq");
+        OPERATORS.put("~=", "ne");
+        OPERATORS.put("<", "lt");
+        OPERATORS.put("<=", "le");
+        OPERATORS.put(">", "gt");
+        OPERATORS.put(">=", "ge");
     }
 
     public Converter(CommonTokenStream stream) {

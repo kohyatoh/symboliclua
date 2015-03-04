@@ -38,4 +38,10 @@ public class ConverterTest {
         parse("1==2");
         assertEquals("symbolic.eq(1,2)", converter.visit(parser.exp()));
     }
+
+    @Test
+    public void testNe() {
+        parse("1~=2");
+        assertEquals("symbolic.ne(1,2)", converter.visit(parser.exp()));
+    }
 }
