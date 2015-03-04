@@ -26,4 +26,10 @@ public class ConverterTest {
         parse("?");
         assertEquals("symbolic.value()", converter.visit(parser.exp()));
     }
+
+    @Test
+    public void testAdd() {
+        parse("1+2");
+        assertEquals("1+2", converter.visit(parser.exp()));
+    }
 }
