@@ -1,6 +1,7 @@
 _ENV.symbolic = require "symbolic"
 
-filename = arg[1]
+local filename = arg[1]
+local orig_filename = arg[2]
 if not filename then
     print "usage: lua run.lua <filename>"
     os.exit(1)
@@ -11,4 +12,4 @@ if not f then
     print("error loading file: " .. filename)
     os.exit(1)
 end
-symbolic.eval(f)
+symbolic.eval(f, orig_filename)

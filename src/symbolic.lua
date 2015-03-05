@@ -98,9 +98,15 @@ local function z3execute (code)
 end
 
 -- package functions
-function symbolic.eval (f)
+function symbolic.eval (f, filename)
     local sol = nil
     local seed = nil
+    local lines = {}
+    if filename then
+        for line in io.lines(filename) do
+            table.insert(lines, line)
+        end
+    end
     print "thinking..."
     for k = 1, 1000 do
         symbols = {}
@@ -149,18 +155,19 @@ function symbolic.eval (f)
         end
         print "stubs:"
         for i, v in ipairs(user_stubs) do
-            local sym = v
-            local i = properties[sym].id
+            local sym = v.symbol
+            local id = properties[sym].id
+            print(string.format("line %d: %s", v.line, lines[v.line]))
             if properties[sym].t == "table" then
                 local props = {}
                 for name, val in pairs(properties[sym].props) do
                     table.insert(props, name .. ": ?")
                 end
-                print(string.format("  %s : { %s }", v, table.concat(props, ", ")))
+                print(string.format("  ? =: { %s }", table.concat(props, ", ")))
             elseif properties[sym].t == "function" then
-                print(string.format("  %s : <function>", v))
+                print(string.format("  ? = <function>"))
             elseif properties[sym].t == "number" then
-                print(string.format("  %s : %f", v, sol[id]))
+                print(string.format("  ? = %f", sol[id]))
             end
         end
         print "running with stubs..."
@@ -175,7 +182,8 @@ end
 
 function symbolic.value ()
     local v = Symbol:new()
-    table.insert(user_stubs, v)
+    local line = debug.getinfo(2).currentline
+    table.insert(user_stubs, { symbol = v, line = line })
     return v
 end
 
