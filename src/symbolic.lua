@@ -164,7 +164,12 @@ function symbolic.eval (f, filename)
                     table.insert(props,
                             string.format("%s = <%s>", name, gettype(val)))
                 end
-                print(string.format("  ? =: { %s }", table.concat(props, ", ")))
+                local props_str = table.concat(props, ", ")
+                if #props_str > 0 then
+                    print(string.format("  ? =: { %s }", props_str))
+                else
+                    print(string.format("  ? =: {}"))
+                end
             elseif properties[sym].t == "function" then
                 print(string.format("  ? = <function>"))
             elseif properties[sym].t == "number" then
@@ -242,6 +247,12 @@ function Symbol.__index (a, k)
     properties[a].props[k] = newval
     rawset(a, k, newval)
     return newval
+end
+
+function Symbol.__newindex (a, k, v)
+    settype(a, "table")
+    properties[a].props = properties[a].props or {}
+    rawset(a, k, v)
 end
 
 function Symbol.__call (a, arg)
