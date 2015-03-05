@@ -97,6 +97,15 @@ local function z3execute (code)
     end
 end
 
+local function readnumber (v)
+    local p = v:find("/")
+    if p then
+        return tonumber(v:sub(1, p-1)) / tonumber(v:sub(p+1))
+    else
+        return tonumber(v)
+    end
+end
+
 -- package functions
 function symbolic.eval (f, filename)
     local sol = nil
@@ -128,8 +137,8 @@ function symbolic.eval (f, filename)
                 sol = {}
                 seed = k
                 for i, w in ipairs(s) do
-                    local k, v = w:match("(%w+),(%w+)")
-                    sol[tonumber(k:sub(2))] = tonumber(v)
+                    local k, v = w:match("(%w+),([0-9\\/]+)")
+                    sol[tonumber(k:sub(2))] = readnumber(v)
                 end
                 break
             end
@@ -201,16 +210,53 @@ function symbolic.value ()
 end
 
 function symbolic.eq (a, b)
-    if not issymbol(a) and not issymbol(b) then
-        return a == b
-    end
+    if not issymbol(a) and not issymbol(b) then return a == b end
+    return symbolic.test(a, b, {"==", "!="})
+end
+
+function symbolic.ne (a, b)
+    if not issymbol(a) and not issymbol(b) then return a ~= b end
+    return symbolic.test(a, b, {"!=", "=="})
+end
+
+function symbolic.lt (a, b)
+    if not issymbol(a) and not issymbol(b) then return a < b end
+    return symbolic.test(a, b, {"<", ">="})
+end
+
+function symbolic.le (a, b)
+    if not issymbol(a) and not issymbol(b) then return a <= b end
+    return symbolic.test(a, b, {"<=", ">"})
+end
+
+function symbolic.gt (a, b)
+    if not issymbol(a) and not issymbol(b) then return a > b end
+    return symbolic.test(a, b, {">", "<="})
+end
+
+function symbolic.ge (a, b)
+    if not issymbol(a) and not issymbol(b) then return a >= b end
+    return symbolic.test(a, b, {">=", "<"})
+end
+
+function symbolic.test (a, b, operators)
     if issymbol(a) and not properties[a].t then settype(a, gettype(b)) end
     if issymbol(b) and not properties[b].t then settype(b, gettype(a)) end
-    local i = randomizer:int(2) + 1
-    local expr = string.format("%s%s%s",
-            tostring(a), ({'==', '!='})[i], tostring(b))
+    local r = randomizer:int(2) + 1
+    local expr = string.format("%s%s%s", tostring(a), operators[r], tostring(b))
     table.insert(constraints, expr)
-    return ({true, false})[i]
+    return r == 1
+end
+
+function symbolic.arith (a, b, operator)
+    local newval = Symbol:new()
+    if issymbol(a) then settype(a, "number") end
+    if issymbol(b) then settype(b, "number") end
+    settype(newval, "number")
+    local expr = string.format("%s==%s%s%s",
+            tostring(newval), tostring(a), operator, tostring(b))
+    table.insert(constraints, expr)
+    return newval
 end
 
 -- Symbol methods
@@ -231,13 +277,19 @@ function Symbol:__tostring ()
 end
 
 function Symbol.__add (a, b)
-    local newval = Symbol:new()
-    if issymbol(a) then settype(a, "number") end
-    if issymbol(b) then settype(b, "number") end
-    settype(newval, "number")
-    local expr = string.format("%s==%s+%s", tostring(newval), tostring(a), tostring(b))
-    table.insert(constraints, expr)
-    return newval
+    return symbolic.arith(a, b, "+")
+end
+
+function Symbol.__sub (a, b)
+    return symbolic.arith(a, b, "-")
+end
+
+function Symbol.__mul (a, b)
+    return symbolic.arith(a, b, "*")
+end
+
+function Symbol.__div (a, b)
+    return symbolic.arith(a, b, "/")
 end
 
 function Symbol.__index (a, k)
