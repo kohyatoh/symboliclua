@@ -138,7 +138,7 @@ function symbolic.eval (f, filename)
             table.insert(lines, line)
         end
     end
-    print "thinking..."
+    print "> thinking..."
     local start = os.time()
     while true do
         local t = os.time() - start
@@ -212,7 +212,7 @@ function symbolic.eval (f, filename)
                 print(string.format("  ? = %f", sol[id]))
             end
         end
-        print "running with stubs..."
+        print "> running with stubs..."
         solution = sol
         randomizer:setseed(seed)
         symbols = {}
