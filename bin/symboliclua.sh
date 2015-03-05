@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [ "$1" = "" ]; then
+  echo "usage: $0 <filename>"
+  exit 1
+fi
 FROM=$1
 NAME=`basename $FROM`
 BASE=`dirname $0`/..
