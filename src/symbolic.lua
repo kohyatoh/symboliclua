@@ -152,7 +152,11 @@ function symbolic.eval (f)
             local sym = v
             local i = properties[sym].id
             if properties[sym].t == "table" then
-                print(string.format("  %s : {}", v))
+                local props = {}
+                for name, val in pairs(properties[sym].props) do
+                    table.insert(props, name .. ": ?")
+                end
+                print(string.format("  %s : { %s }", v, table.concat(props, ", ")))
             elseif properties[sym].t == "function" then
                 print(string.format("  %s : <function>", v))
             elseif properties[sym].t == "number" then
@@ -218,6 +222,8 @@ end
 function Symbol.__index (a, k)
     local newval = Symbol:new()
     settype(a, "table")
+    properties[a].props = properties[a].props or {}
+    properties[a].props[k] = newval
     rawset(a, k, newval)
     return newval
 end
