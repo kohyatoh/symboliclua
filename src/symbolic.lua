@@ -141,6 +141,7 @@ function symbolic.eval (f, filename)
     if sol then
         print "solution found."
         for i, sym in ipairs(symbols) do
+            break -- skip solution printing
             if properties[sym].t == "table" then
                 print(string.format("  %s = <table>", sym))
                 sol[i] = {}
@@ -153,7 +154,6 @@ function symbolic.eval (f, filename)
                 sol[i] = nil
             end
         end
-        print "stubs:"
         for i, v in ipairs(user_stubs) do
             local sym = v.symbol
             local id = properties[sym].id
