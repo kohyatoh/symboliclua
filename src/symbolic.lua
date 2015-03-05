@@ -11,6 +11,7 @@ local Symbol = {}
 local symbols = {} -- list of symbols
 local properties = {} -- symbol -> properties
 local constraints = {} -- list of constraints of an execution path
+local user_stubs = {} -- symbolic.value()s
 local solution = nil -- solution for constraints
 
 -- libraries
@@ -105,6 +106,7 @@ function symbolic.eval (f)
         symbols = {}
         constraints = {}
         properties = {}
+        user_stubs = {}
         path = {}
         randomizer:setseed(k)
         local stdout = io.stdout
@@ -134,15 +136,27 @@ function symbolic.eval (f)
         print "solution found."
         for i, sym in ipairs(symbols) do
             if properties[sym].t == "table" then
-                print(string.format("%s : {}", sym))
+                print(string.format("  %s = <table>", sym))
                 sol[i] = {}
             elseif properties[sym].t == "function" then
-                print(string.format("%s : function", sym))
+                print(string.format("  %s = <function>", sym))
                 sol[i] = function() end
             elseif properties[sym].t == "number" then
-                print(string.format("%s : %f", sym, sol[i]))
+                print(string.format("  %s = %f", sym, sol[i]))
             else
                 sol[i] = nil
+            end
+        end
+        print "stubs:"
+        for i, v in ipairs(user_stubs) do
+            local sym = v
+            local i = properties[sym].id
+            if properties[sym].t == "table" then
+                print(string.format("  %s : {}", v))
+            elseif properties[sym].t == "function" then
+                print(string.format("  %s : <function>", v))
+            elseif properties[sym].t == "number" then
+                print(string.format("  %s : %f", v, sol[id]))
             end
         end
         print "running with stubs..."
@@ -156,7 +170,9 @@ function symbolic.eval (f)
 end
 
 function symbolic.value ()
-    return Symbol:new()
+    local v = Symbol:new()
+    table.insert(user_stubs, v)
+    return v
 end
 
 function symbolic.eq (a, b)
