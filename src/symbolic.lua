@@ -161,7 +161,8 @@ function symbolic.eval (f, filename)
             if properties[sym].t == "table" then
                 local props = {}
                 for name, val in pairs(properties[sym].props) do
-                    table.insert(props, name .. ": ?")
+                    table.insert(props,
+                            string.format("%s = <%s>", name, gettype(val)))
                 end
                 print(string.format("  ? =: { %s }", table.concat(props, ", ")))
             elseif properties[sym].t == "function" then
@@ -174,9 +175,16 @@ function symbolic.eval (f, filename)
         solution = sol
         randomizer:setseed(seed)
         symbols = {}
-        f()
+        local r, e = pcall(f)
+        if r then
+            print "Test passed."
+        else
+            print "Test Failed."
+            print(e)
+        end
     else
         print "no solution."
+        print "Test failed."
     end
 end
 
