@@ -78,10 +78,10 @@ local function z3code (symbols, constraints)
 end
 
 local function z3execute (code)
-    local f = io.open('z.py', 'w')
+    local f = io.open('../tmp/z.py', 'w')
     f:write(code)
     f:close()
-    local p = io.popen('python z.py')
+    local p = io.popen('python ../tmp/z.py')
     local status = p:read()
     if status == 'sat' then
         local ret = {}
