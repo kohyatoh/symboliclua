@@ -18,6 +18,7 @@ local solution = nil -- solution for constraints
 local table, string, tostring = table, string, tostring
 
 local timelimit = 5
+local print_error = false
 
 print = function (...)
     local t = {...}
@@ -39,6 +40,25 @@ end
 function randomizer:int (n)
     self.x = (self.x * 16654525 + 1013904223) % self.mod
     return n and self.x % n or self.x
+end
+
+-- object identifier
+local identifier = { c = 0, table = {} }
+
+function identifier:get (v)
+    if not self.table[v] then
+        self.c = self.c + 1
+        self.table[v] = self.c
+    end
+    return self.table[v]
+end
+
+function identifier:shallowhash (t)
+    local h = {}
+    for k, v in pairs(t) do
+        table.insert(h, tostring(self:get(k)) .. "=" .. tostring(self:get(v)))
+    end
+    return table.concat(h, ",")
 end
 
 local function issymbol (v)
@@ -148,8 +168,10 @@ function symbolic.eval (f, filename)
                 break
             end
         else
-                -- For debug
---            print(e)
+            -- For debug
+            if print_error then
+                print(e)
+            end
         end
     end
     if sol then
@@ -312,15 +334,16 @@ function Symbol.__newindex (a, k, v)
     rawset(a, k, v)
 end
 
-function Symbol.__call (a, arg)
+function Symbol.__call (a, ...)
     settype(a, "function")
     properties[a].ret = properties[a].ret or {}
-    local args = arg or {} -- TODO: multiple args
-    if not properties[a].ret[args] then
+    local args = {...}
+    local h = identifier:shallowhash(args)
+    if not properties[a].ret[h] then
         local newval = Symbol:new()
-        properties[a].ret[args] = newval
+        properties[a].ret[h] = newval
     end
-    return properties[a].ret[args]
+    return properties[a].ret[h]
 end
 
 return symbolic
