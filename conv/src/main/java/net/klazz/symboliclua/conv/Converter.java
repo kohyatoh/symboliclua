@@ -82,7 +82,7 @@ public class Converter extends LuaBaseVisitor<String> {
             ParseTree c = node.getChild(i);
             Interval v = c.getSourceInterval();
             ret.add(a < v.a ? mStream.getText(new Interval(a, v.a-1)) : "");
-            a = v.a + 1;
+            a = v.b + 1;
         }
         ret.add(a <= b ? mStream.getText(new Interval(a, b)) : "");
         return ret;

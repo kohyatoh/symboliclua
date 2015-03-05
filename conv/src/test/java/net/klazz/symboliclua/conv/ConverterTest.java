@@ -56,4 +56,10 @@ public class ConverterTest {
         parse(" 1\t== \n\n 2\t");
         assertEquals(" symbolic.eq(1\t, \n\n 2)\t", converter.visit(parser.exp()));
     }
+
+    @Test
+    public void testStmtWithSpaces() {
+        parse("print ( a == b )");
+        assertEquals("print ( symbolic.eq(a , b) )", converter.visit(parser.exp()));
+    }
 }
