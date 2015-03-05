@@ -17,6 +17,8 @@ local solution = nil -- solution for constraints
 -- libraries
 local table, string, tostring = table, string, tostring
 
+local timelimit = 5
+
 print = function (...)
     local t = {...}
     for i, v in ipairs(t) do
@@ -109,7 +111,7 @@ end
 -- package functions
 function symbolic.eval (f, filename)
     local sol = nil
-    local seed = nil
+    local seed = 0
     local lines = {}
     if filename then
         for line in io.lines(filename) do
@@ -117,13 +119,17 @@ function symbolic.eval (f, filename)
         end
     end
     print "thinking..."
-    for k = 1, 1000 do
+    local start = os.time()
+    while true do
+        local t = os.time() - start
+        if t > timelimit then break end
         symbols = {}
         constraints = {}
         properties = {}
         user_stubs = {}
         path = {}
-        randomizer:setseed(k)
+        seed = seed + 1
+        randomizer:setseed(seed)
         local stdout = io.stdout
         io.stdout = io.open('/dev/null', 'w')
         local r, e = pcall(f)
@@ -135,7 +141,6 @@ function symbolic.eval (f, filename)
             local s = z3execute(code)
             if s then
                 sol = {}
-                seed = k
                 for i, w in ipairs(s) do
                     local k, v = w:match("(%w+),([0-9\\/]+)")
                     sol[tonumber(k:sub(2))] = readnumber(v)
